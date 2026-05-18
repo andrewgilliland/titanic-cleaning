@@ -7,14 +7,16 @@ OUTPUT_DIR = Path("output")
 OUTPUT_DIR.mkdir(exist_ok=True)
 
 
-def main():
-    # ── 1. Loading a Real Dataset ─────────────────────────────────────────────
+# ── 1. Loading a Real Dataset ─────────────────────────────────────────────────
+def load_data():
     df = sns.load_dataset("titanic")
-
     # Alternatively, load any CSV the same way:
     # df = pd.read_csv("titanic.csv")
+    return df
 
-    # ── 2. Inspecting the Data ────────────────────────────────────────────────
+
+# ── 2. Inspecting the Data ────────────────────────────────────────────────────
+def inspect_data(df):
     print("=== Shape ===")
     print(df.shape)  # (891, 15) — rows, columns
 
@@ -33,8 +35,9 @@ def main():
     print("\n=== Null Percentages ===")
     print((df.isnull().sum() / len(df) * 100).round(1).sort_values(ascending=False))
 
-    # ── 3. Handling Missing Values ────────────────────────────────────────────
 
+# ── 3. Handling Missing Values ────────────────────────────────────────────────
+def handle_missing_values(df):
     # deck is missing 77 % of values — preserve the signal, then drop the column
     df["deck_known"] = df["deck"].notnull().astype(int)
     df = df.drop(columns=["deck"])
@@ -53,8 +56,11 @@ def main():
     print("\n=== Null Counts After Cleaning ===")
     print(df[["age", "embarked", "embark_town"]].isnull().sum())
 
-    # ── 4. Fixing Data Types ──────────────────────────────────────────────────
+    return df
 
+
+# ── 4. Fixing Data Types ──────────────────────────────────────────────────────
+def fix_data_types(df):
     # String columns with a small number of distinct values → category
     for col in ["sex", "class", "embarked", "who"]:
         df[col] = df[col].astype("category")
@@ -71,7 +77,11 @@ def main():
     print("\n=== Types After Fixes ===")
     print(df.dtypes)
 
-    # ── 5. Removing Duplicates ────────────────────────────────────────────────
+    return df
+
+
+# ── 5. Removing Duplicates ────────────────────────────────────────────────────
+def remove_duplicates(df):
     print("\n=== Duplicate Row Count ===")
     print(df.duplicated().sum())
 
@@ -79,10 +89,11 @@ def main():
     print(df[df.duplicated(keep=False)])
 
     # Drop duplicates (no-op here, but the pattern is always the same)
-    df = df.drop_duplicates()
+    return df.drop_duplicates()
 
-    # ── 6. Exploratory Data Analysis ─────────────────────────────────────────
 
+# ── 6. Exploratory Data Analysis ─────────────────────────────────────────────
+def explore_data(df):
     # Five-number summary for numeric columns
     print("\n=== describe() ===")
     print(df.describe())
@@ -117,8 +128,9 @@ def main():
     print("\n=== Correlation Matrix ===")
     print(df[["age", "fare", "pclass", "sibsp", "parch"]].corr().round(2))
 
-    # ── 7. Visualizing with Matplotlib ───────────────────────────────────────
 
+# ── 7. Visualizing with Matplotlib ───────────────────────────────────────────
+def visualize(df):
     # Distribution of a numeric column
     df["age"].hist(bins=20, edgecolor="black")
     plt.title("Age Distribution")
@@ -171,6 +183,16 @@ def main():
     plt.tight_layout()
     plt.savefig(OUTPUT_DIR / "distributions.png")
     plt.show()
+
+
+def main():
+    df = load_data()
+    inspect_data(df)
+    df = handle_missing_values(df)
+    df = fix_data_types(df)
+    df = remove_duplicates(df)
+    explore_data(df)
+    visualize(df)
 
 
 if __name__ == "__main__":
